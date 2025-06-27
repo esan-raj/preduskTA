@@ -18,7 +18,8 @@ def upgrade():
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('title', sa.String(), nullable=True),
                     sa.Column('author', sa.String(), nullable=True),
-                    sa.PrimaryKeyConstraint('id')
+                    sa.PrimaryKeyConstraint('id'),
+                    sa.UniqueConstraint('title', 'author', name='unique_title_author')
                     )
     op.create_table('reviews',
                     sa.Column('id', sa.Integer(), nullable=False),

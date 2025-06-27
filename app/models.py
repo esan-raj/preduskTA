@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey,UniqueConstraint
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -8,6 +8,7 @@ class Book(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
     author = Column(String)
+    __table_args__ = (UniqueConstraint('title', 'author', name='unique_title_author'),)
 
     reviews = relationship("Review", back_populates="book")
 

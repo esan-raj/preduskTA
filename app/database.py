@@ -1,15 +1,18 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
-import fakeredis
+import redis
+import os
 
-# SQLite database (for simplicity, can switch to PostgreSQL)
-SQLALCHEMY_DATABASE_URL = "sqlite:///./preduskTA.db"
+SQLALCHEMY_DATABASE_URL = "sqlite+pysqlite:///./preduskTA.db"
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)
+
+# Redis configuration using Railway environment variable
+redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")  # Fallback for local testing
+redis_client = redis.Redis.from_url(redis_url)
 
 Base = declarative_base()
-
-# Mock Redis setup
-redis_client = fakeredis.FakeRedis()

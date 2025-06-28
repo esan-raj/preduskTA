@@ -76,16 +76,28 @@ async def get_books(db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(f"Failed to retrieve books: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to retrieve books: {str(e)}")
+    
+    
+class ReviewCreate(BaseModel):
+    rating: int = Field(..., ge=1, le=5, description="Rating from 1 to 5")
+    comment: str = Field(None, description="Optional comment")
 
+    model_config = ConfigDict(json_schema_extra={"example": {"rating": 4, "comment": "Great book!"}})
+    
+    
 @router.get("/books/{book_id}/reviews", response_model=list)
 async def get_reviews(book_id: int, db: Session = Depends(get_db)):
     reviews = db.query(models.Review).filter(models.Review.book_id == book_id).all()
-    return [{"id": r.id, "content": r.content, "rating": r.rating} for r in reviews]
+    return [{"id": r.id, "rating": r.rating, "comment": r.comment} for r in reviews]
 
 @router.post("/books/{book_id}/reviews", response_model=dict)
-async def add_review(book_id: int, review: dict, db: Session = Depends(get_db)):
-    db_review = models.Review(book_id=book_id, **review)
+async def add_review(book_id: int, review: ReviewCreate, db: Session = Depends(get_db)):
+    book = db.query(models.Book).filter(models.Book.id == book_id).first()
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    db_review = models.Review(**review.model_dump(), book_id=book_id)
     db.add(db_review)
     db.commit()
     db.refresh(db_review)
-    return {"id": db_review.id, "content": db_review.content, "rating": db_review.rating}
+    database.redis_client.delete("books_cache")  # Invalidate cache
+    return {"id": db_review.id, "rating": db_review.rating, "comment": db_review.comment}

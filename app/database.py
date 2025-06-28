@@ -3,7 +3,8 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 import redis
 import os
-
+from dotenv import load_dotenv
+load_dotenv()
 SQLALCHEMY_DATABASE_URL = "sqlite+pysqlite:///./preduskTA.db"
 
 engine = create_engine(
